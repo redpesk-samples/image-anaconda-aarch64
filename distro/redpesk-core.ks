@@ -1,0 +1,99 @@
+%include ../features/redpesk-partitioning.ks
+%include ../features/password.ks
+%include ../features/regional.ks
+
+#Live media need
+network --bootproto=dhcp --device=link --activate
+# Use the text interface not the graphical one
+#text
+#version=DEVEL
+
+
+# Be sure host drive will not be touched by anaconda
+ignoredisk --drives=sd*|nvme*|vd*|sr*
+#ignoredisk --drives="*"
+# Run the Setup Agent on first boot
+firstboot --disable
+# Do not configure the X Window System
+skipx
+# Shutdown the image when finished
+shutdown
+
+%addon com_redhat_kdump --disable
+%end
+
+%post --erroronfail --log /tmp/post-distro.log
+# Note that /etc/dnf/dnf.conf is not replace at dnf upgrade
+echo "do not install weak deps"
+echo "install_weak_deps=0" >> /etc/dnf/dnf.conf
+echo "disable rngd.service"
+systemctl disable rngd.service
+echo "import gpg keys"
+rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY*
+echo "Packages within this disk image :"
+rpm -qa | sort -h
+echo ""
+# Note that running rpm recreates the rpm db files which aren't needed or wanted
+rm -f /var/lib/rpm/__db*
+
+# remove random seed, the newly installed instance should make it's own
+rm -f /var/lib/systemd/random-seed
+
+dnf -y remove dracut-config-generic
+
+# Remove machine-id on pre generated images
+rm -f /etc/machine-id
+touch /etc/machine-id
+
+# Fix "/etc/rc.d/rc.local is not marked executable"
+mkdir -p /etc/systemd/system-generators
+touch /etc/systemd/system-generators/systemd-rc-local-generator
+
+# setup systemd to boot to the right runlevel
+echo -n "Setting default runlevel to multiuser text mode"
+rm -f /etc/systemd/system/default.target
+ln -s /lib/systemd/system/multi-user.target /etc/systemd/system/default.target
+#Permit root login in ssh
+[ -f /etc/ssh/sshd_config ] && sed -ri "s/^\#?(PermitRootLogin).*$/\1 yes/" /etc/ssh/sshd_config
+echo .
+
+echo "ARCH=\"`rpm --eval %{_arch}`\"" >> /etc/os-release
+echo "BUILD_DATE=\"`date '+%Y-%m-%d %H:%M:%S'`\"" >> /etc/os-release
+%end
+
+%packages --ignoremissing --nocore --exclude-weakdeps
+%include ../group/core
+chkconfig
+chrony
+dracut-config-generic   # remove this in %post
+dracut-live
+glibc-langpack-en
+redpesk-repos
+redhat-rpm-config
+platform-firstboot
+dnf
+dracut-redpesk-common
+#hack: needed by dnf
+libgomp
+sssd-client
+-glibc-all-langpacks
+-fedora-repos
+-fedora-repos-modular
+-dracut-config-rescue
+-generic-release*
+-initial-setup
+-initial-setup-gui
+-iproute-tc
+-ipw*
+-iwl*
+-lvm2
+-trousers
+-usb_modeswitch
+-brcmfmac-firmware
+-atheros-firmware
+
+systemd-udev
+
+%end
+
+%include ../packages/tools.ks
