@@ -1,7 +1,6 @@
-# %packages --ignoremissing --nocore --exclude-weakdeps
+%packages --ignoremissing --nocore --exclude-weakdeps
 NetworkManager-wifi
-
-# %end
+%end
 
 %pre-install
 # disable systemd-networkd
