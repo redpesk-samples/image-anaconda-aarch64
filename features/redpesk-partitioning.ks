@@ -13,10 +13,10 @@ uboot-tools
 %post --logfile=/tmp/post-uboot-bootscr.log --erroronfail
 
 cat <<'EOF' > /boot/bootscript.txt
-setenv mmcroot /dev/mmcblk${devnum}p3 rootwait rw
-setenv bootargs ${jh_clk} console=${console} root=${mmcroot} security=smack
-load mmc ${devnum}:${mmcpart} ${loadaddr} Image
-load mmc ${devnum}:${mmcpart}  ${fdt_addr_r} imx8mp-hummingboard-pulse.dtb
+setenv mmcroot /dev/mmcblk1p2 rootwait rw
+setenv bootargs ${jh_clk} console=${console} root=${mmcroot} security=smack 
+load mmc 1:1 ${loadaddr} Image
+load mmc 1:1  ${fdt_addr_r} imx8mp-hummingboard-pulse.dtb
 booti ${loadaddr} - ${fdt_addr_r}
 EOF
 mkimage -A arm -C none -T script -O u-boot -n "Redpesk boot script" -d /boot/bootscript.txt /boot/boot.scr
