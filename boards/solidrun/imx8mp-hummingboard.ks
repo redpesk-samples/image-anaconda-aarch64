@@ -12,6 +12,9 @@ dd if=/mnt/sysroot/boot/flash.bin of=/dev/mapper/Redpesk-OS bs=1024 seek=32 conv
 %packages --ignoremissing --nocore --exclude-weakdeps
 uboot
 solidrun-firmware
+optee-os
+optee-client
+optee-test
 -*grubby
 -grubby-deprecated
 -extlinux-bootloader
