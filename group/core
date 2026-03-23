@@ -20,6 +20,8 @@ irqbalance
 kbd
 kexec-tools
 less
+linux-firmware-amphion
+linux-firmware-imx
 man-db
 ncurses
 openssh-clients
